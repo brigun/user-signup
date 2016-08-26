@@ -24,11 +24,20 @@ EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 def valid_username(username):
     return USER_RE.match(username)
 
+
 def valid_password(password):
     return PASSWORD_RE.match(password)
 
+
+def valid_verify(verify, password):
+    if password == verify:
+        return True
+    else:
+        return False
+
 def valid_email(email):
     return EMAIL_RE.match(email)
+
 
 
 # html boilerplate for the top of every page
@@ -63,46 +72,35 @@ signup_form = """
                     <label>Username</label>
                 </td>
                 <td>
-                    <input type="text" name="username" value="%(username)s">
+                    <input type="text" name="username" value="%(enteredUsername)s"><span class="error" >%(error)s</span>
                 </td>
-                <div class="error" >
-                    %(error)s
-                </div>
+                <td></td>
             </tr>
             <tr>
                 <td>
                     <label>Password</label>
                 </td>
                 <td>
-                    <input type="password" name="password" value="%(password)s">
+                    <input type="password" name="password" value="%(enteredPassword)s"><span class="error">%(error)s</span>
                 </td>
-                <div class="error">
-                    %(error)s
-
-                </div>
+                <td></td>
             </tr>
             <tr>
                 <td><label>Verify Password</label>
                 </td>
                 <td>
-                    <input type="password" name="verify" value="%(verify)s">
+                    <input type="password" name="verify" value="%(enteredVerify)s"><span class="error">%(error)s</span>
                 </td>
-                <div class="error">
-                    %(error)s
-
-                </div>
+                <td></td>
             </tr>
             <tr>
                 <td>
                     <label>E-mail (<em>optional</em>)</label>
                 </td>
                 <td>
-                    <input type="text" name="email" value="%(email)s">
+                    <input type="text" name="email" value="%(enteredEmail)s"><span class="error">%(error)s</span>
                 </td>
-                <div class="error">
-                    %(error)s
-
-                </div>
+                <td></td>
             </tr>
         </tbody>
     </table>
@@ -117,57 +115,48 @@ Congratulations on signing up!
 """
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        error = self.request.get("error")
-        username = self.request.get("username")
-        verify = self.request.get("verify")
-        email = self.request.get("email")
+
+        self.write_form()
 
 
-
-
-        #self.write_form()
-        self.response.write(page_header + signup_form + page_footer)
 
     def post(self):
+        enteredUsername = self.request.get('username')
+        enteredPassword = self.request.get('password')
+        enteredVerify = self.request.get('verify')
+        enteredEmail = self.request.get('email')
+        error = ""
 
         #check for valid Username
-        username = self.request.get("username")
-        password = self.request.get("password")
-        verify = self.request.get("verify")
-        email = self.request.get("email")
+        if not valid_username(enteredUsername):
+            error = "That's not a valid username"
+            #enteredUsername = self.request.get('username')
 
-        if  not valid_username(username):
+        elif not valid_password(enteredPassword):
+            error = "That's not a valid password"
+            #enteredPassword = self.request.get('password')
 
-            error = "That is not a valid username"
-            #self.write_form(username, error)
+        elif not valid_verify(enteredVerify, enteredPassword):
+            error = "That password doesn't match"
+            #enteredVerify = self.request.get('verify')
 
-        elif  not valid_password(password):
-
-            error = "That is not a valid password"
-            #self.write_form(password, error)
-
-        elif verify != password:
-
-            error = "That password does not match"
-            #self.write_form(verify, error)
-
-        elif not valid_email(email):
-
+        elif not valid_email(enteredEmail):
             error = "That is not a valid e-mail"
-            #self.write_form(email, error)
+            #enteredEmail = self.request.get('email')
+
+        elif error != "":
+            self.write_form()
 
         else:
+            response = page_header + welcome_form % (enteredUsername) + page_footer
+            self.response.write(response)
 
-            response = page_header + welcome_form % (username) + page_footer
-            #self.response.write(response)
-
+    def write_form(self, error="", enteredUsername="", enteredPassword="", enteredVerify="", enteredEmail=""):
         self.response.write(page_header + signup_form % {"error": error,
-                                                        "username": username,
-                                                        "verify": verify,
-                                                        "password": password,
-                                                        "email": email
-                                                         } + page_footer)
-
+                                                        "enteredUsername": enteredUsername,
+                                                        "enteredPassword": enteredPassword,
+                                                        "enteredVerify": enteredVerify,
+                                                        "enteredEmail": enteredEmail} + page_footer)
     #def write_form(self, username="", password="", verify="", email="", error=""):
         #self.response.write(page_header + signup_form % {"error": error,
                                                         #"username": username,
