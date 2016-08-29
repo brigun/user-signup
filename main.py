@@ -72,7 +72,7 @@ signup_form = """
                     <label>Username</label>
                 </td>
                 <td>
-                    <input type="text" name="username" value="%(enteredUsername)s"><span class="error" >%(error)s</span>
+                    <input type="text" name="username" value="%(username)s"><span class="error" >%(error)s</span>
                 </td>
                 <td></td>
             </tr>
@@ -81,7 +81,7 @@ signup_form = """
                     <label>Password</label>
                 </td>
                 <td>
-                    <input type="password" name="password" value="%(enteredPassword)s"><span class="error">%(error)s</span>
+                    <input type="password" name="password" value="%(password)s"><span class="error">%(error)s</span>
                 </td>
                 <td></td>
             </tr>
@@ -89,7 +89,7 @@ signup_form = """
                 <td><label>Verify Password</label>
                 </td>
                 <td>
-                    <input type="password" name="verify" value="%(enteredVerify)s"><span class="error">%(error)s</span>
+                    <input type="password" name="verify" value="%(verify)s"><span class="error">%(error)s</span>
                 </td>
                 <td></td>
             </tr>
@@ -98,7 +98,7 @@ signup_form = """
                     <label>E-mail (<em>optional</em>)</label>
                 </td>
                 <td>
-                    <input type="text" name="email" value="%(enteredEmail)s"><span class="error">%(error)s</span>
+                    <input type="text" name="email" value="%(email)s"><span class="error">%(error)s</span>
                 </td>
                 <td></td>
             </tr>
@@ -118,53 +118,40 @@ class MainHandler(webapp2.RequestHandler):
 
         self.write_form()
 
-
-
     def post(self):
-        enteredUsername = self.request.get('username')
-        enteredPassword = self.request.get('password')
-        enteredVerify = self.request.get('verify')
-        enteredEmail = self.request.get('email')
-        error = ""
+        new_username = self.request.get("username")
+        new_password = self.request.get("password")
+        new_verify = self.request.get("verify")
+        new_email = self.request.get("email")
 
-        #check for valid Username
-        if not valid_username(enteredUsername):
-            error = "That's not a valid username"
-            #enteredUsername = self.request.get('username')
+        username = valid_username(new_username)
+        password = valid_password(new_password)
+        verify = valid_verify(new_verify, new_password)
+        email = valid_email(new_email)
 
-        elif not valid_password(enteredPassword):
-            error = "That's not a valid password"
-            #enteredPassword = self.request.get('password')
-
-        elif not valid_verify(enteredVerify, enteredPassword):
-            error = "That password doesn't match"
-            #enteredVerify = self.request.get('verify')
-
-        elif not valid_email(enteredEmail):
-            error = "That is not a valid e-mail"
-            #enteredEmail = self.request.get('email')
-
-        elif error != "":
-            self.write_form()
-
-        else:
-            response = page_header + welcome_form % (enteredUsername) + page_footer
+        if username and password and verify and email:
+            response = page_header + welcome_form % new_username + page_footer
             self.response.write(response)
+        elif not username:
+            error = "That is not a valid username."
+            self.write_form(username = new_username, error = error)
+        elif not password:
+            error = "That is not a valid password."
+            self.write_form(password = new_password, error = error)
+        elif not verify:
+            error = "Those passwords don't match."
+            self.write_form(verify = new_verify, error = error)
+        else:
+            error = "That is not a valid e-mail address."
+            self.write_form(email = new_email, error = error)
 
-    def write_form(self, error="", enteredUsername="", enteredPassword="", enteredVerify="", enteredEmail=""):
-        self.response.write(page_header + signup_form % {"error": error,
-                                                        "enteredUsername": enteredUsername,
-                                                        "enteredPassword": enteredPassword,
-                                                        "enteredVerify": enteredVerify,
-                                                        "enteredEmail": enteredEmail} + page_footer)
-    #def write_form(self, username="", password="", verify="", email="", error=""):
-        #self.response.write(page_header + signup_form % {"error": error,
-                                                        #"username": username,
-                                                        #"verify": verify,
-                                                        #"password": password,
-                                                        #"email": email
-                                                         #} + page_footer)
-
+    def write_form(self, username = "", password = "", verify = "", email = "", error = ""):
+        signup = signup_form % {"username" : username,
+                                "password" : password,
+                                "verify" : verify,
+                                "email" : email,
+                                "error" : error}
+        self.response.write(page_header + signup + page_footer)
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
