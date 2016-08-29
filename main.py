@@ -137,13 +137,13 @@ class MainHandler(webapp2.RequestHandler):
             self.write_form(username = new_username, error = error)
         elif not password:
             error = "That is not a valid password."
-            self.write_form(password = new_password, error = error)
+            self.write_form(username = new_username, error = error)
         elif not verify:
             error = "Those passwords don't match."
-            self.write_form(verify = new_verify, error = error)
+            self.write_form(username = new_username, error = error)
         else:
             error = "That is not a valid e-mail address."
-            self.write_form(email = new_email, error = error)
+            self.write_form(username = new_username, email = new_email, error = error)
 
     def write_form(self, username = "", password = "", verify = "", email = "", error = ""):
         signup = signup_form % {"username" : username,
